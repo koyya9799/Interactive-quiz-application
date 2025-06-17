@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz app</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, #ff6b9d, #c44569, #4834d4, #74b9ff);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            background: linear-gradient(135deg, #ff6b9d, #4834d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 5px rgba(255, 107, 157, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(72, 52, 212, 0.3)); }
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 107, 157, 0.2);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #ff6b9d;
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b9d, #4834d4);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #4834d4;
+            border: 2px solid #4834d4;
+            margin-top: 15px;
+        }
+
+        .btn-secondary:hover {
+            background: #4834d4;
+            color: white;
+        }
+
+        .question-container {
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 107, 157, 0.2);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b9d, #4834d4);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 107, 157, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .option:hover {
+            transform: translateY(-2px);
+            border-color: #ff6b9d;
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.2);
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, #ff6b9d, #4834d4);
+            color: white;
+            border-color: transparent;
+        }
+
+        .option.correct {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+            border-color: transparent;
+        }
+
+        .option.incorrect {
+            background: linear-gradient(135deg, #e84393, #fd79a8);
+            color: white;
+            border-color: transparent;
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .feedback.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feedback.correct {
+            background: rgba(0, 184, 148, 0.1);
+            color: #00b894;
+            border: 2px solid rgba(0, 184, 148, 0.3);
+        }
+
+        .feedback.incorrect {
+            background: rgba(232, 67, 147, 0.1);
+            color: #e84393;
+            border: 2px solid rgba(232, 67, 147, 0.3);
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4834d4;
+        }
+
+        .quiz-complete {
+            text-align: center;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff6b9d, #4834d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 20px 0;
+            animation: bounce 0.6s ease-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .performance {
+            font-size: 1.3rem;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #4834d4;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(232, 67, 147, 0.1);
+            color: #e84393;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #e84393;
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .logo h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <!-- Login Page -->
+    <div class="container" id="loginPage">
+        <div class="logo">
+            <h1>Quiz application</h1>
+            <p class="subtitle">Test Your Knowledge, Challenge Your Mind</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email Address</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Sign In</button>
+            <button type="button" class="btn btn-secondary" onclick="showRegister()">Create New Account</button>
+        </form>
+    </div>
+
+    <!-- Registration Page -->
+    <div class="container hidden" id="registerPage">
+        <div class="logo">
+            <h1>Join QuizMaster</h1>
+            <p class="subtitle">Create Your Account & Start Learning</p>
+        </div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="registerName">Full Name</label>
+                <input type="text" id="registerName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="registerEmail">Email Address</label>
+                <input type="email" id="registerEmail" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Create Account</button>
+            <button type="button" class="btn btn-secondary" onclick="showLogin()">Back to Sign In</button>
+        </form>
+    </div>
+
+    <!-- Quiz Page -->
+    <div class="container hidden" id="quizPage">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <div class="user-info" id="userInfo"></div>
+        
+        <div class="score-display">
+            <div class="score">Score: <span id="currentScore">0</span></div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progressBar"></div>
+        </div>
+        
+        <div class="question-container">
+            <div class="question" id="questionText"></div>
+            <div class="options" id="optionsContainer"></div>
+            <div class="feedback" id="feedback"></div>
+            <button class="btn btn-primary hidden" id="nextBtn" onclick="nextQuestion()">Next Question</button>
+        </div>
+    </div>
+
+    <!-- Results Page -->
+    <div class="container hidden" id="resultsPage">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+        <div class="user-info" id="userInfoResults"></div>
+        
+        <div class="quiz-complete">
+            <h2>Quiz Complete!</h2>
+            <div class="final-score" id="finalScore"></div>
+            <div class="performance" id="performance"></div>
+            <button class="btn btn-primary" onclick="restartQuiz()">Take Quiz Again</button>
+            <button class="btn btn-secondary" onclick="logout()">Back to Home</button>
+        </div>
+    </div>
+
+    <script>
+        // Quiz questions database
+        const questions = [
+            {
+                question: "What is the capital of France?",
+                options: ["London", "Berlin", "Paris", "Madrid"],
+                correct: 2
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                correct: 1
+            },
+            {
+                question: "What is 15 + 27?",
+                options: ["42", "41", "43", "40"],
+                correct: 0
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+                correct: 2
+            },
+            {
+                question: "What is the largest ocean on Earth?",
+                options: ["Atlantic", "Indian", "Arctic", "Pacific"],
+                correct: 3
+            },
+            {
+                question: "In which year did World War II end?",
+                options: ["1944", "1945", "1946", "1943"],
+                correct: 1
+            },
+            {
+                question: "What is the chemical symbol for gold?",
+                options: ["Go", "Gd", "Au", "Ag"],
+                correct: 2
+            },
+            {
+                question: "Which is the smallest country in the world?",
+                options: ["Monaco", "Vatican City", "San Marino", "Luxembourg"],
+                correct: 1
+            },
+            {
+                question: "What is the speed of light?",
+                options: ["300,000 km/s", "150,000 km/s", "450,000 km/s", "200,000 km/s"],
+                correct: 0
+            },
+            {
+                question: "Who wrote 'Romeo and Juliet'?",
+                options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+                correct: 1
+            }
+        ];
+
+        // App state
+        let currentUser = null;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+        let userAnswers = [];
+
+        // Page management
+        function showPage(pageId) {
+            document.querySelectorAll('.container').forEach(container => {
+                container.classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        function showLogin() {
+            showPage('loginPage');
+        }
+
+        function showRegister() {
+            showPage('registerPage');
+        }
+
+        function showQuiz() {
+            showPage('quizPage');
+            startQuiz();
+        }
+
+        function showResults() {
+            showPage('resultsPage');
+            displayResults();
+        }
+
+        // Authentication
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (email && password) {
+                // In a real app, you'd validate against a backend
+                currentUser = {
+                    name: email.split('@')[0],
+                    email: email
+                };
+                showQuiz();
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (name && email && password) {
+                // In a real app, you'd save to backend
+                currentUser = {
+                    name: name,
+                    email: email
+                };
+                showQuiz();
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            currentQuestionIndex = 0;
+            score = 0;
+            answered = false;
+            userAnswers = [];
+            showLogin();
+        }
+
+        // Quiz functionality
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            answered = false;
+            userAnswers = [];
+            
+            document.getElementById('userInfo').textContent = `Welcome, ${currentUser.name}`;
+            document.getElementById('currentScore').textContent = score;
+            
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            answered = false;
+            
+            document.getElementById('questionText').textContent = `${currentQuestionIndex + 1}. ${question.question}`;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            updateProgress();
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('nextBtn').classList.add('hidden');
+        }
+
+        function selectOption(selectedIndex) {
+            if (answered) return;
+            
+            answered = true;
+            const question = questions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            
+            // Store user's answer
+            userAnswers.push({
+                question: question.question,
+                selected: selectedIndex,
+                correct: question.correct,
+                isCorrect: selectedIndex === question.correct
+            });
+            
+            // Show correct/incorrect styling
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && selectedIndex !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+                option.style.pointerEvents = 'none';
+            });
+            
+            // Update score and show feedback
+            if (selectedIndex === question.correct) {
+                score++;
+                showFeedback(true, "Correct! Well done!");
+            } else {
+                showFeedback(false, `Incorrect. The correct answer is: ${question.options[question.correct]}`);
+            }
+            
+            document.getElementById('currentScore').textContent = score;
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function showFeedback(isCorrect, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            setTimeout(() => {
+                feedback.classList.add('show');
+            }, 100);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function displayResults() {
+            document.getElementById('userInfoResults').textContent = `${currentUser.name}`;
+            document.getElementById('finalScore').textContent = `${score}/${questions.length}`;
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            let performance = "";
+            
+            if (percentage >= 90) {
+                performance = "Outstanding! 🏆 You're a true quiz master!";
+            } else if (percentage >= 80) {
+                performance = "Excellent! 🌟 Great knowledge!";
+            } else if (percentage >= 70) {
+                performance = "Good job! 👍 Well done!";
+            } else if (percentage >= 60) {
+                performance = "Not bad! 📚 Keep learning!";
+            } else {
+                performance = "Keep practicing! 💪 You'll improve!";
+            }
+            
+            document.getElementById('performance').textContent = `${percentage}% - ${performance}`;
+        }
+
+        function restartQuiz() {
+            startQuiz();
+            showQuiz();
+        }
+
+        // Initialize app
+        showLogin();
+    </script>
+</body>
+</html>
